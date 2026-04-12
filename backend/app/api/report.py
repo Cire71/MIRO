@@ -262,7 +262,8 @@ def chat_with_report_agent():
         )
 
         result = agent.chat(message=message, chat_history=chat_history)
-        return jsonify({"success": True, "data": {"response": result, "simulation_id": simulation_id}})
+        response_text = result.get("response", "") if isinstance(result, dict) else str(result or "")
+        return jsonify({"success": True, "data": {"response": response_text, "simulation_id": simulation_id}})
 
     except Exception as e:
         logger.error(f"Chat failed: {str(e)}")
