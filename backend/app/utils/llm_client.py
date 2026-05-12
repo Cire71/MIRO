@@ -7,10 +7,28 @@ Supports Ollama num_ctx parameter to prevent prompt truncation
 import json
 import os
 import re
+import ssl
 from typing import Optional, Dict, Any, List
+import httpx
 from openai import OpenAI
 
 from ..config import Config
+
+
+_WINDOWS_CA_BUNDLE = r"C:\projets\MiroFish\windows-ca-bundle.pem"
+
+
+def _build_http_client() -> httpx.Client:
+    """Build httpx client — uses Windows CA bundle on Windows to fix SSL verification."""
+    cert_file = (
+        os.environ.get("SSL_CERT_FILE")
+        or os.environ.get("REQUESTS_CA_BUNDLE")
+        or (_WINDOWS_CA_BUNDLE if os.path.exists(_WINDOWS_CA_BUNDLE) else None)
+    )
+    if cert_file and os.path.exists(cert_file):
+        ctx = ssl.create_default_context(cafile=cert_file)
+        return httpx.Client(verify=ctx, timeout=300.0)
+    return httpx.Client(timeout=300.0)
 
 
 class LLMClient:
@@ -34,6 +52,7 @@ class LLMClient:
             api_key=self.api_key,
             base_url=self.base_url,
             timeout=timeout,
+            http_client=_build_http_client(),
         )
 
         # Ollama context window size — prevents prompt truncation.
