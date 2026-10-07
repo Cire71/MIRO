@@ -8,6 +8,7 @@ services:
       - .env
     environment:
       - NEO4J_URI=bolt://neo4j:7687
+      - EMBEDDING_BASE_URL=http://ollama:11434
     ports:
       - "3000:3000"
       - "5001:5001"
